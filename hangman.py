@@ -2,15 +2,14 @@
 from wonderwords import RandomWord
 
 # VARIABLES
-guesses = 11
-r = RandomWord()
-word = r.word()
-word_dict = {}
-counter = 0
-for i in word:
-    word_dict[counter] = i
-    counter += 1
-dupe_keys = []
+# guesses = 11
+# r = RandomWord()
+# word = r.word()
+# word_dict = {}
+# counter = 0
+# for i in word:
+#     word_dict[counter] = i
+#     counter += 1
 
 # SUBROUTINES
 def setup():
@@ -33,18 +32,18 @@ def setup():
     for i in word:
         word_dict[counter] = i
         counter += 1
-    dupe_keys = []
 
-    hidden_word, hidden_word_list, dupe_keys = hide_word(word)
-
+    hidden_word, hidden_word_list, dupe_keys = hide_word(word, word_dict)
+    print("test")
     return guesses, word, word_dict, dupe_keys, hidden_word, hidden_word_list
 
-def hide_word(word):
+def hide_word(word, word_dict):
     """
     ...Changes the word into a series of underscores.
 
     Args:
         word (str): The word to be hidden.
+        word_dict (dict): A dictionary containing the letters in word(str).
 
     Returns:
         hidden_word (str): The word with its letters replaced with underscores.
@@ -93,7 +92,7 @@ def get_dupes(x):
 
     return dupe_keys
 
-def guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses):
+def guess(user_guess, hidden_word, hidden_word_list, word_dict, dupe_keys, guesses):
     """
     ...Checks if the user's guess is correct.
 
@@ -101,6 +100,7 @@ def guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses):
         user_guess (str): The user's guess as a single letter.
         hidden_word (str): The word with its letters replaced with underscores.
         hidden_word_list (lst): A list of the underscores, guessed letters, and spaces.
+        word_dict (dict): A dictionary containing the letters in word(str).
         dupe_keys (lst): A list of duplicate keys from a flipped dictionary to account for duplicate letters in the word to guess.
         guesses (int): How many guesses the user has left.
 
@@ -110,17 +110,18 @@ def guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses):
     """
     if user_guess == "":
         print("\nGuess cannot be blank, try again\n")
-        main(hidden_word, guesses, dupe_keys, word)
+        main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
     elif user_guess.isnumeric():
         print("\nGuess cannot be a numeric value, try again\n")
-        main(hidden_word, guesses, dupe_keys, word)
+        main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
     elif len(user_guess) > 1:
         print("\nGuess must be a single letter, try again\n")
-        main(hidden_word, guesses, dupe_keys, word)
+        main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
     elif user_guess in word:
         for key in word_dict.keys():
             x = word_dict[key]
             if x == user_guess:
+                guesses = guesses - 1
                 hidden_word_list[key] = user_guess
 
                 for k, v in word_dict.items(): #check if user's guess has more than 1 instances in the word
@@ -128,7 +129,6 @@ def guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses):
                         if str(i) == str(k):
                             if v == user_guess:
                                 hidden_word_list[int(i)] = user_guess
-                                continue
 
                 hidden_word = "".join(hidden_word_list)
                 return hidden_word, guesses
@@ -137,30 +137,36 @@ def guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses):
         guesses = guesses - 1
         return hidden_word, guesses
 
-def main(hidden_word, guesses, dupe_keys, word):
+def main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict):
     guessed = False
     while guessed == False:
         if "_" not in hidden_word:
             guessed = True
+            break
 
-        if guesses == 0:
+        if guesses == 0 and "_" in hidden_word:
             print(f"\nThe word was {word}. You lost!\n")
             x = input("Play again? [y/n]\n> ").lower()
             if x == "y":
                 guesses, word, word_dict, dupe_keys, hidden_word, hidden_word_list = setup()
-                main(hidden_word, guesses, dupe_keys, word)
+                main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
             else:
                 exit()
 
-        print(hidden_word)
+        print(f"\n{hidden_word}")
         print(f"Guesses Remaining: {guesses}")
         user_guess = input("Enter your guess:> ")
-        hidden_word, guesses = guess(user_guess, hidden_word, hidden_word_list, dupe_keys, guesses)
+        hidden_word, guesses = guess(user_guess, hidden_word, hidden_word_list, word_dict, dupe_keys, guesses)
     print(hidden_word)
-    print("You won!")
+    print("\nYou won!")
+    x = input("Play again? [y/n]\n> ").lower()
+    if x == "y":
+        guesses, word, word_dict, dupe_keys, hidden_word, hidden_word_list = setup()
+        main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
+    else:
+        exit()
 
 # MAIN
 guesses, word, word_dict, dupe_keys, hidden_word, hidden_word_list = setup()
 print("-- Hangman --")
-# hidden_word, hidden_word_list, dupe_keys = hide_word(word)
-main(hidden_word, guesses, dupe_keys, word)
+main(hidden_word, hidden_word_list, guesses, dupe_keys, word, word_dict)
